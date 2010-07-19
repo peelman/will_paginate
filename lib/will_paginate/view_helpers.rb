@@ -183,6 +183,50 @@ module WillPaginate
       end
     end
     
+    # Renders a set of links for changing the page size (per_page).
+    #
+    #   <%= paginate_per_page_links @posts %>
+    #   #-> Per page: 25, 50
+    #
+    # Allows the specification of lead text, follow text, the separator between links, and what page offsets you wish to render.
+    #
+    # <%= paginate_per_page_links @posts, {:lead_text => 'Print Before -> ', :follow_text => ' <- Print After', :separator => ' | ', :offsets => [25, 50, 75, 100, 2000]} %>
+    #   #-> Print Before -> 25 | 50 | 75 | 100 | 2000 <- PrintAfter
+    def paginate_per_page_links(collection, options = {})
+      lead_text = options[:lead_text] || 'Per page: '
+      follow_text = options[:follow_text] || ''
+      separator = options[:separator] || ', '
+      offsets = options[:offsets] || [ 25,50,100 ]
+      content = ''
+      default_page = 1
+
+      offsets.sort
+
+      if collection.total_entries < offsets.first
+        return
+      end
+
+      offsets.each do |offset|
+        if (offset > collection.total_entries)
+          next
+        end
+
+        if (offset != offsets.first)
+          content = content + separator
+        end
+
+        if (offset < collection.total_entries)
+          if (offset != params[:per_page].to_i)
+            content = content + link_to(offset, :overwrite_params => {:page => default_page, :per_page => offset})
+          else
+            content = content + offset.to_s
+          end
+        end
+      end
+
+      %{#{lead_text} #{content} #{follow_text}}% []
+    end
+    
     if respond_to? :safe_helper
       safe_helper :will_paginate, :paginated_section, :page_entries_info
     end
